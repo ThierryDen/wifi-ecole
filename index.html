@@ -55,9 +55,12 @@
   </div>
 
   <script>
+    // ⚠️ REMPLACE CETTE URL par la tienne (ton compte et ton dépôt GitHub)
+    const WIFI_JSON_URL = 'https://thierryden.github.io/wifi-ecole/wifi.json';
+
     async function load() {
       try {
-        const res = await fetch('./wifi.json?t=' + Date.now());
+        const res = await fetch(WIFI_JSON_URL + '?t=' + Date.now());
         if (!res.ok) throw new Error();
         const data = await res.json();
 
