@@ -1,6 +1,6 @@
 {
   "ssid": "Elèves",
-  "login": "user2026",
-  "password": "motdepasse3103",
-  "updated": "2026-03-31"
+  "login": "← nouveau login ici",
+  "password": "← nouveau mot de passe ici",
+  "updated": "2026-03-31"   ← date du jour au format AAAA-MM-JJ
 }
