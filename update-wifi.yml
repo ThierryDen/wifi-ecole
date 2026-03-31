@@ -1,0 +1,90 @@
+# .github/workflows/update-wifi.yml
+# ──────────────────────────────────────────────────────────────────────────────
+# PHASE 2 – Mise à jour automatique des codes WiFi
+# À activer une fois que votre informaticien réseau a fourni les détails de l'API
+# du routeur (URL, clé d'API, format de réponse).
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Mise à jour codes WiFi
+
+on:
+  schedule:
+    # Exécution tous les jours à 07h30 (UTC → 08h30 en Belgique heure d'été)
+    - cron: '30 6 * * 1-5'   # lundi–vendredi uniquement
+    # Pour 7 jours/7, remplacer par :
+    # - cron: '30 6 * * *'
+
+  # Permet aussi un déclenchement manuel depuis l'onglet "Actions" de GitHub
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      # ────────────────────────────────────────────────────────────────────────
+      # ÉTAPE À PERSONNALISER PAR VOTRE INFORMATICIEN RÉSEAU
+      # Exemples selon le type de routeur :
+      #
+      # CAS 1 – API HTTP du routeur (ex: Ubiquiti UniFi, Cisco Meraki, etc.)
+      # Remplacez l'URL et les paramètres par ceux fournis par votre routeur.
+      #
+      # CAS 2 – Fichier CSV/TXT exporté automatiquement sur un partage réseau
+      # Montez le partage et lisez le fichier.
+      #
+      # Pour l'instant, un script Python de démonstration génère des codes fictifs.
+      # À remplacer par le vrai appel API.
+      # ────────────────────────────────────────────────────────────────────────
+
+      - name: Récupérer les codes WiFi depuis le routeur
+        env:
+          ROUTER_API_URL: ${{ secrets.ROUTER_API_URL }}
+          ROUTER_API_KEY: ${{ secrets.ROUTER_API_KEY }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, datetime, urllib.request, urllib.error
+
+          today = datetime.date.today().isoformat()
+
+          # ── À REMPLACER : appel à votre API routeur ──────────────────────────
+          # Exemple générique (décommenter et adapter) :
+          #
+          # api_url = os.environ["ROUTER_API_URL"]
+          # api_key = os.environ["ROUTER_API_KEY"]
+          # req = urllib.request.Request(api_url, headers={"Authorization": f"Bearer {api_key}"})
+          # with urllib.request.urlopen(req) as resp:
+          #     data = json.loads(resp.read())
+          # login    = data["username"]   # adapter au format de votre API
+          # password = data["password"]   # adapter au format de votre API
+          # ─────────────────────────────────────────────────────────────────────
+
+          # Valeurs de démonstration (à supprimer quand l'API est branchée)
+          login    = "REMPLACER_PAR_VRAI_LOGIN"
+          password = "REMPLACER_PAR_VRAI_MOT_DE_PASSE"
+
+          wifi = {
+            "ssid":     "Elèves",
+            "login":    login,
+            "password": password,
+            "updated":  today
+          }
+
+          with open("wifi.json", "w", encoding="utf-8") as f:
+              json.dump(wifi, f, ensure_ascii=False, indent=2)
+
+          print(f"wifi.json mis à jour pour le {today}")
+          EOF
+
+      - name: Vérifier que wifi.json est valide
+        run: python3 -c "import json; json.load(open('wifi.json')); print('JSON valide ✓')"
+
+      - name: Commit et push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add wifi.json
+          git diff --staged --quiet && echo "Aucun changement" || \
+            git commit -m "WiFi: codes du $(date +'%d/%m/%Y') [auto]" && git push
